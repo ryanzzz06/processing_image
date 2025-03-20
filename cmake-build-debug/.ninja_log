@@ -1,6 +1,4 @@
 # ninja log v6
-1	210	1742490253824802195	CMakeFiles/processing_image.dir/main.c.o	48b396b58f885143
-210	251	1742490254034022247	processing_image	314f5616c5abc1dd
-5	139	1742491522855822352	CMakeFiles/processing_image.dir/bmp8.c.o	6b904275376f24b7
 4	161	1742491522855311133	CMakeFiles/processing_image.dir/main.c.o	9658fc395c73e21f
 161	258	1742491523011973399	processing_image	6e0338b38e0fe3c5
+5	139	1742491522855822352	CMakeFiles/processing_image.dir/bmp8.c.o	6b904275376f24b7

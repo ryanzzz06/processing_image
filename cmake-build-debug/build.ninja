@@ -61,6 +61,12 @@ build CMakeFiles/processing_image.dir/bmp8.c.o: C_COMPILER__processing_image_uns
   OBJECT_DIR = CMakeFiles/processing_image.dir
   OBJECT_FILE_DIR = CMakeFiles/processing_image.dir
 
+build CMakeFiles/processing_image.dir/bmp24.c.o: C_COMPILER__processing_image_unscanned_Debug /Users/ryan/Documents/GitHub/processing_image/bmp24.c || cmake_object_order_depends_target_processing_image
+  DEP_FILE = CMakeFiles/processing_image.dir/bmp24.c.o.d
+  FLAGS = -g -std=gnu99 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -mmacosx-version-min=15.1 -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/processing_image.dir
+  OBJECT_FILE_DIR = CMakeFiles/processing_image.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target processing_image
@@ -69,7 +75,7 @@ build CMakeFiles/processing_image.dir/bmp8.c.o: C_COMPILER__processing_image_uns
 #############################################
 # Link the executable processing_image
 
-build processing_image: C_EXECUTABLE_LINKER__processing_image_Debug CMakeFiles/processing_image.dir/main.c.o CMakeFiles/processing_image.dir/bmp8.c.o
+build processing_image: C_EXECUTABLE_LINKER__processing_image_Debug CMakeFiles/processing_image.dir/main.c.o CMakeFiles/processing_image.dir/bmp8.c.o CMakeFiles/processing_image.dir/bmp24.c.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -mmacosx-version-min=15.1
   OBJECT_DIR = CMakeFiles/processing_image.dir
   POST_BUILD = :
