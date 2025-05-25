@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <math.h>
 // Memory management functions
 t_pixel **bmp24_allocateDataPixels(int width, int height) {
     t_pixel **pixels = (t_pixel **)malloc(height * sizeof(t_pixel *));
@@ -416,4 +416,122 @@ void bmp24_sharpen(t_bmp24 *img) {
 
     bmp24_freeDataPixels(temp, img->height);
     free(kernel_ptr);
+}
+// Helper functions for color space conversion
+t_yuv rgb_to_yuv(t_pixel pixel) {
+    t_yuv yuv;
+    yuv.y = 0.299f * pixel.red + 0.587f * pixel.green + 0.114f * pixel.blue;
+    yuv.u = -0.14713f * pixel.red - 0.28886f * pixel.green + 0.436f * pixel.blue;
+    yuv.v = 0.615f * pixel.red - 0.51499f * pixel.green - 0.10001f * pixel.blue;
+    return yuv;
+}
+
+t_pixel yuv_to_rgb(t_yuv yuv) {
+    t_pixel pixel;
+    pixel.red = round(yuv.y + 1.13983f * yuv.v);
+    pixel.green = round(yuv.y - 0.39465f * yuv.u - 0.58060f * yuv.v);
+    pixel.blue = round(yuv.y + 2.03211f * yuv.u);
+
+    // Clamp values to [0, 255]
+    pixel.red = (pixel.red > 255) ? 255 : (pixel.red < 0) ? 0 : pixel.red;
+    pixel.green = (pixel.green > 255) ? 255 : (pixel.green < 0) ? 0 : pixel.green;
+    pixel.blue = (pixel.blue > 255) ? 255 : (pixel.blue < 0) ? 0 : pixel.blue;
+
+    return pixel;
+}
+
+void bmp24_equalize(t_bmp24 *img) {
+    if (!img || !img->data) {
+        fprintf(stderr, "Error: Invalid image\n");
+        return;
+    }
+
+    // Allocate arrays for YUV values and histogram
+    t_yuv **yuv_data = (t_yuv **)malloc(img->height * sizeof(t_yuv *));
+    unsigned int *hist = (unsigned int *)calloc(256, sizeof(unsigned int));
+    if (!yuv_data || !hist) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        if (yuv_data) free(yuv_data);
+        if (hist) free(hist);
+        return;
+    }
+
+    // Convert RGB to YUV and compute histogram of Y component
+    for (int y = 0; y < img->height; y++) {
+        yuv_data[y] = (t_yuv *)malloc(img->width * sizeof(t_yuv));
+        if (!yuv_data[y]) {
+            fprintf(stderr, "Error: Memory allocation failed\n");
+            for (int i = 0; i < y; i++) free(yuv_data[i]);
+            free(yuv_data);
+            free(hist);
+            return;
+        }
+
+        for (int x = 0; x < img->width; x++) {
+            yuv_data[y][x] = rgb_to_yuv(img->data[y][x]);
+            hist[(int)round(yuv_data[y][x].y)]++;
+        }
+    }
+
+    // Compute CDF
+    unsigned int *cdf = (unsigned int *)malloc(256 * sizeof(unsigned int));
+    if (!cdf) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        for (int y = 0; y < img->height; y++) free(yuv_data[y]);
+        free(yuv_data);
+        free(hist);
+        return;
+    }
+
+    cdf[0] = hist[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i-1] + hist[i];
+    }
+
+    // Find minimum non-zero value in CDF
+    unsigned int cdf_min = 0;
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] > 0) {
+            cdf_min = cdf[i];
+            break;
+        }
+    }
+
+    // Normalize CDF
+    unsigned int N = cdf[255];  // Total number of pixels
+    unsigned int *hist_eq = (unsigned int *)malloc(256 * sizeof(unsigned int));
+    if (!hist_eq) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        for (int y = 0; y < img->height; y++) free(yuv_data[y]);
+        free(yuv_data);
+        free(hist);
+        free(cdf);
+        return;
+    }
+
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] > 0) {
+            hist_eq[i] = round(((float)(cdf[i] - cdf_min) / (N - cdf_min)) * 255);
+        } else {
+            hist_eq[i] = 0;
+        }
+    }
+
+    // Apply equalization to Y component and convert back to RGB
+    for (int y = 0; y < img->height; y++) {
+        for (int x = 0; x < img->width; x++) {
+            int y_value = (int)round(yuv_data[y][x].y);
+            yuv_data[y][x].y = hist_eq[y_value];
+            img->data[y][x] = yuv_to_rgb(yuv_data[y][x]);
+        }
+    }
+
+    // Free allocated memory
+    for (int y = 0; y < img->height; y++) {
+        free(yuv_data[y]);
+    }
+    free(yuv_data);
+    free(hist);
+    free(cdf);
+    free(hist_eq);
 }

@@ -4,8 +4,11 @@
 
 #ifndef BMP8_H
 #define BMP8_H
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-#endif //BMP8_H
 typedef struct {
     unsigned char header[54];
     unsigned char colorTable[1024];
@@ -28,4 +31,8 @@ void bmp8_brightness(t_bmp8 *img, int value);
 void bmp8_threshold(t_bmp8 *img, int threshold);
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize);
 
-#endif // BMP8_H
+// Histogram equalization functions
+unsigned int *bmp8_computeHistogram(t_bmp8 *img);
+unsigned int *bmp8_computeCDF(unsigned int *hist);
+void bmp8_equalize(t_bmp8 *img, unsigned int *hist_eq);
+#endif //BMP8_H

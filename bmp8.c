@@ -188,4 +188,86 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
     }
 
     free(tempData);
-} 
+}
+// Histogram equalization functions
+unsigned int *bmp8_computeHistogram(t_bmp8 *img) {
+    if (!img || !img->data) {
+        fprintf(stderr, "Error: Invalid image\n");
+        return NULL;
+    }
+
+    // Allocate histogram array (256 bins for 8-bit grayscale)
+    unsigned int *hist = (unsigned int *)calloc(256, sizeof(unsigned int));
+    if (!hist) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Count pixels for each gray level
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        hist[img->data[i]]++;
+    }
+
+    return hist;
+}
+
+unsigned int *bmp8_computeCDF(unsigned int *hist) {
+    if (!hist) {
+        fprintf(stderr, "Error: Invalid histogram\n");
+        return NULL;
+    }
+
+    // Allocate CDF array
+    unsigned int *cdf = (unsigned int *)malloc(256 * sizeof(unsigned int));
+    if (!cdf) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        return NULL;
+    }
+
+    // Compute cumulative sum
+    cdf[0] = hist[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i-1] + hist[i];
+    }
+
+    // Find minimum non-zero value in CDF
+    unsigned int cdf_min = 0;
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] > 0) {
+            cdf_min = cdf[i];
+            break;
+        }
+    }
+
+    // Normalize CDF to get equalized histogram
+    unsigned int *hist_eq = (unsigned int *)malloc(256 * sizeof(unsigned int));
+    if (!hist_eq) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        free(cdf);
+        return NULL;
+    }
+
+    unsigned int N = cdf[255];  // Total number of pixels
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] > 0) {
+            hist_eq[i] = round(((float)(cdf[i] - cdf_min) / (N - cdf_min)) * 255);
+        } else {
+            hist_eq[i] = 0;
+        }
+    }
+
+    free(cdf);
+    return hist_eq;
+}
+
+void bmp8_equalize(t_bmp8 *img, unsigned int *hist_eq) {
+    if (!img || !img->data || !hist_eq) {
+        fprintf(stderr, "Error: Invalid parameters\n");
+        return;
+    }
+
+    // Apply equalization to each pixel
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        img->data[i] = hist_eq[img->data[i]];
+    }
+}

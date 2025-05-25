@@ -23,7 +23,8 @@ void printFilterMenu() {
     printf("6. Sharpness\n");
     printf("7. Outline\n");
     printf("8. Emboss\n");
-    printf("9. Return to the previous menu\n");
+    printf("9. Histogram Equalization\n");
+    printf("10. Return to the previous menu\n");
     printf(">>> Your choice: ");
 }
 
@@ -192,6 +193,9 @@ int main() {
                             bmp24_emboss(colorImage);
                             break;
                         case 9:
+                            bmp24_equalize(colorImage);
+                        break;
+                        case 10:
                             continue;
                         default:
                             printf("Invalid filter choice\n");

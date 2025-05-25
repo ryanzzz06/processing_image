@@ -35,6 +35,13 @@ typedef struct {
     uint8_t blue;
 } t_pixel;
 
+// YUV color space structure
+typedef struct {
+    float y;  // Luminance
+    float u;  // Chrominance U
+    float v;  // Chrominance V
+} t_yuv;
+
 // BMP image structure
 typedef struct {
     t_bmp_header header;
@@ -88,5 +95,8 @@ void bmp24_gaussianBlur(t_bmp24 *img);
 void bmp24_outline(t_bmp24 *img);
 void bmp24_emboss(t_bmp24 *img);
 void bmp24_sharpen(t_bmp24 *img);
+
+// Histogram equalization function
+void bmp24_equalize(t_bmp24 *img);
 
 #endif // BMP24_H 
